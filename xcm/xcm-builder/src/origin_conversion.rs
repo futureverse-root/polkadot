@@ -258,6 +258,29 @@ where
 	}
 }
 
+/// `Convert` implementation to convert from some a `Signed` (system) `Origin` into an `AccountId20`.
+///
+/// Typically used when configuring `pallet-xcm` for allowing normal accounts to dispatch an XCM from an `AccountId20`
+/// origin.
+pub struct SignedToAccountId20<Origin, AccountId, Network>(
+	PhantomData<(Origin, AccountId, Network)>,
+);
+impl<Origin: OriginTrait + Clone, AccountId: Into<[u8; 20]>, Network: Get<NetworkId>>
+	Convert<Origin, MultiLocation> for SignedToAccountId20<Origin, AccountId, Network>
+where
+	Origin::PalletsOrigin: From<SystemRawOrigin<AccountId>>
+		+ TryInto<SystemRawOrigin<AccountId>, Error = Origin::PalletsOrigin>,
+{
+	fn convert(o: Origin) -> Result<MultiLocation, Origin> {
+		o.try_with_caller(|caller| match caller.try_into() {
+			Ok(SystemRawOrigin::Signed(who)) =>
+				Ok(Junction::AccountKey20 { network: Network::get(), key: who.into() }.into()),
+			Ok(other) => Err(other.into()),
+			Err(other) => Err(other),
+		})
+	}
+}
+
 /// `Convert` implementation to convert from some a `Signed` (system) `Origin` into an `AccountId32`.
 ///
 /// Typically used when configuring `pallet-xcm` for allowing normal accounts to dispatch an XCM from an `AccountId32`

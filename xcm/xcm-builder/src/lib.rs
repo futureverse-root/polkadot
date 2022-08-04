@@ -39,7 +39,7 @@ pub use origin_conversion::{
 	BackingToPlurality, ChildParachainAsNative, ChildSystemParachainAsSuperuser, EnsureXcmOrigin,
 	ParentAsSuperuser, RelayChainAsNative, SiblingParachainAsNative,
 	SiblingSystemParachainAsSuperuser, SignedAccountId32AsNative, SignedAccountKey20AsNative,
-	SignedToAccountId32, SovereignSignedViaLocation,
+	SignedToAccountId20, SignedToAccountId32, SovereignSignedViaLocation,
 };
 
 mod barriers;

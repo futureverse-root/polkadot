@@ -38,6 +38,8 @@ members = [
 	"runtime/parachains",
 	"runtime/polkadot",
 	"runtime/polkadot/constants",
+	"runtime/portobello",
+	"runtime/portobello/constants",
 	"runtime/kusama",
 	"runtime/kusama/constants",
 	"runtime/rococo",

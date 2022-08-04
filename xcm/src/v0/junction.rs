@@ -31,6 +31,8 @@ pub enum NetworkId {
 	Polkadot,
 	/// Kusama.
 	Kusama,
+	/// Portobello
+	Portobello,
 }
 
 /// An identifier of a pluralistic body.
