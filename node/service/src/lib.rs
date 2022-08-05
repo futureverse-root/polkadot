@@ -91,7 +91,9 @@ pub use polkadot_client::KusamaExecutorDispatch;
 #[cfg(feature = "polkadot-native")]
 pub use polkadot_client::PolkadotExecutorDispatch;
 
-pub use chain_spec::{KusamaChainSpec, PolkadotChainSpec, RococoChainSpec, WestendChainSpec};
+pub use chain_spec::{
+	KusamaChainSpec, PolkadotChainSpec, PortobelloChainSpec, RococoChainSpec, WestendChainSpec,
+};
 pub use consensus_common::{block_validation::Chain, Proposal, SelectChain};
 #[cfg(feature = "full-node")]
 pub use polkadot_client::{
@@ -263,6 +265,9 @@ pub trait IdentifyVariant {
 
 	/// Returns true if this configuration is for a development network.
 	fn is_dev(&self) -> bool;
+
+	/// Returns if this is a configuration for the `Rococo` network.
+	fn is_portobello(&self) -> bool;
 }
 
 impl IdentifyVariant for Box<dyn ChainSpec> {
@@ -287,6 +292,9 @@ impl IdentifyVariant for Box<dyn ChainSpec> {
 	fn is_dev(&self) -> bool {
 		self.id().ends_with("dev")
 	}
+	fn is_portobello(&self) -> bool {
+		self.id().starts_with("portobello") || self.id().starts_with("prt")
+	}
 }
 
 #[cfg(feature = "full-node")]
@@ -300,7 +308,7 @@ fn open_database(db_source: &DatabaseSource) -> Result<Arc<dyn Database>, Error>
 			path.parent().ok_or(Error::DatabasePathRequired)?.into(),
 			parachains_db::CacheSizes::default(),
 		)?,
-		DatabaseSource::Auto { paritydb_path, rocksdb_path, .. } =>
+		DatabaseSource::Auto { paritydb_path, rocksdb_path, .. } => {
 			if paritydb_path.is_dir() && paritydb_path.exists() {
 				parachains_db::open_creating_paritydb(
 					paritydb_path.parent().ok_or(Error::DatabasePathRequired)?.into(),
@@ -311,7 +319,8 @@ fn open_database(db_source: &DatabaseSource) -> Result<Arc<dyn Database>, Error>
 					rocksdb_path.clone(),
 					parachains_db::CacheSizes::default(),
 				)?
-			},
+			}
+		},
 		DatabaseSource::Custom { .. } => {
 			unimplemented!("No polkadot subsystem db for custom source.");
 		},

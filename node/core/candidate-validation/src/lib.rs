@@ -574,7 +574,7 @@ async fn validate_candidate_exhaustive(
 		Err(ValidationError::InvalidCandidate(WasmInvalidCandidate::PrepareError(e))) =>
 			Ok(ValidationResult::Invalid(InvalidCandidate::ExecutionError(e))),
 
-		Ok(res) =>
+		Ok(res) => {
 			if res.head_data.hash() != candidate_receipt.descriptor.para_head {
 				Ok(ValidationResult::Invalid(InvalidCandidate::ParaHeadHashMismatch))
 			} else {
@@ -592,7 +592,8 @@ async fn validate_candidate_exhaustive(
 				} else {
 					Ok(ValidationResult::Valid(outputs, persisted_validation_data))
 				}
-			},
+			}
+		},
 	}
 }
 

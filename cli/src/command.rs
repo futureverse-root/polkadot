@@ -89,12 +89,16 @@ impl SubstrateCli for Cli {
 			"kusama-local" => Box::new(service::chain_spec::kusama_local_testnet_config()?),
 			#[cfg(feature = "kusama-native")]
 			"kusama-staging" => Box::new(service::chain_spec::kusama_staging_testnet_config()?),
+			#[cfg(feature = "portobello-native")]
+			"portobello" => Box::new(service::chain_spec::portobello_testnet_config()?),
+			#[cfg(feature = "portobello-native")]
+			"dev" => Box::new(service::chain_spec::portobello_development_config()?),
 			#[cfg(not(feature = "kusama-native"))]
 			name if name.starts_with("kusama-") && !name.ends_with(".json") =>
 				Err(format!("`{}` only supported with `kusama-native` feature enabled.", name))?,
 			"polkadot" => Box::new(service::chain_spec::polkadot_config()?),
 			#[cfg(feature = "polkadot-native")]
-			"polkadot-dev" | "dev" => Box::new(service::chain_spec::polkadot_development_config()?),
+			"polkadot-dev" => Box::new(service::chain_spec::polkadot_development_config()?),
 			#[cfg(feature = "polkadot-native")]
 			"polkadot-local" => Box::new(service::chain_spec::polkadot_local_testnet_config()?),
 			#[cfg(feature = "polkadot-native")]
@@ -154,6 +158,8 @@ impl SubstrateCli for Cli {
 					Box::new(service::KusamaChainSpec::from_json_file(path)?)
 				} else if self.run.force_westend || chain_spec.is_westend() {
 					Box::new(service::WestendChainSpec::from_json_file(path)?)
+				} else if chain_spec.is_portobello() {
+					Box::new(service::PortobelloChainSpec::from_json_file(path)?)
 				} else {
 					chain_spec
 				}
@@ -177,10 +183,16 @@ impl SubstrateCli for Cli {
 			return &service::rococo_runtime::VERSION
 		}
 
+		#[cfg(feature = "portobello-native")]
+		if spec.is_portobello() {
+			return &service::portobello::VERSION
+		}
+
 		#[cfg(not(all(
 			feature = "rococo-native",
 			feature = "westend-native",
-			feature = "kusama-native"
+			feature = "kusama-native",
+			feature = "portobello-native"
 		)))]
 		let _ = spec;
 
@@ -233,6 +245,8 @@ macro_rules! unwrap_client {
 			polkadot_client::Client::Kusama($client) => $code,
 			#[cfg(feature = "rococo-native")]
 			polkadot_client::Client::Rococo($client) => $code,
+			#[cfg(feature = "portobello-native")]
+			polkadot_client::Client::Portobello($client) => $code,
 			#[allow(unreachable_patterns)]
 			_ => Err(Error::CommandNotImplemented),
 		}
@@ -542,6 +556,14 @@ pub fn run() -> Result<()> {
 					if chain_spec.is_westend() {
 						return Ok(runner.sync_run(|config| {
 							cmd.run::<service::westend_runtime::Block, service::WestendExecutorDispatch>(config)
+								.map_err(|e| Error::SubstrateCli(e))
+						})?)
+					}
+
+					#[cfg(feature = "portobello-native")]
+					if chain_spec.is_portobello() {
+						return Ok(runner.sync_run(|config| {
+							cmd.run::<service::portobello_runtime::Block, service::PortobelloExecutorDispatch>(config)
 								.map_err(|e| Error::SubstrateCli(e))
 						})?)
 					}

@@ -285,7 +285,7 @@ impl Assets {
 	) -> Result<Assets, TakeError> {
 		let mut taken = Assets::new();
 		match mask {
-			MultiAssetFilter::Wild(All) =>
+			MultiAssetFilter::Wild(All) => {
 				if self.fungible.len() + self.non_fungible.len() <= limit {
 					return Ok(self.swapped(Assets::new()))
 				} else {
@@ -305,7 +305,8 @@ impl Assets {
 							self.non_fungible.insert((c, instance));
 						}
 					});
-				},
+				}
+			},
 			MultiAssetFilter::Wild(AllOf { fun: WildFungible, id }) => {
 				if let Some((id, amount)) = self.fungible.remove_entry(&id) {
 					taken.fungible.insert(id, amount);

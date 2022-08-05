@@ -66,6 +66,7 @@ pyroscope = ["pyro"]
 # Configure the native runtimes to use. Polkadot is enabled by default.
 #
 # Validators require the native runtime currently
+portobello-native = ["service/portobello-native"]
 polkadot-native = ["service/polkadot-native"]
 kusama-native = ["service/kusama-native"]
 westend-native = ["service/westend-native"]

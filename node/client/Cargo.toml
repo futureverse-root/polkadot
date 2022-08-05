@@ -43,17 +43,20 @@ kusama-runtime = { path = "../../runtime/kusama", optional = true }
 westend-runtime = { path = "../../runtime/westend", optional = true }
 rococo-runtime = { path = "../../runtime/rococo", optional = true }
 
+portobello-runtime = { path = "../../runtime/portobello", optional = true }
+
 polkadot-core-primitives = { path = "../../core-primitives" }
 polkadot-primitives = { path = "../../primitives" }
 polkadot-node-core-parachains-inherent = { path = "../core/parachains-inherent" }
 polkadot-runtime-common = { path = "../../runtime/common" }
 
 [features]
-default = ["polkadot"]
+default = ["portobello"]
 polkadot = ["polkadot-runtime"]
 kusama = ["kusama-runtime"]
 rococo = ["rococo-runtime"]
 westend = ["westend-runtime"]
+portobello = ["portobello-runtime"]
 runtime-metrics = [
     "rococo-runtime/runtime-metrics",
     "kusama-runtime/runtime-metrics",

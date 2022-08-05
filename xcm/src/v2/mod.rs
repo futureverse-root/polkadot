@@ -801,8 +801,9 @@ impl<Call> TryFrom<OldXcm<Call>> for Xcm<Call> {
 				response: response.try_into()?,
 				max_weight: 50_000_000,
 			}],
-			OldXcm::TransferAsset { assets, beneficiary } =>
-				vec![TransferAsset { assets, beneficiary }],
+			OldXcm::TransferAsset { assets, beneficiary } => {
+				vec![TransferAsset { assets, beneficiary }]
+			},
 			OldXcm::TransferReserveAsset { assets, dest, effects } => vec![TransferReserveAsset {
 				assets,
 				dest,
@@ -811,17 +812,21 @@ impl<Call> TryFrom<OldXcm<Call>> for Xcm<Call> {
 					.map(Instruction::<()>::try_from)
 					.collect::<result::Result<_, _>>()?),
 			}],
-			OldXcm::HrmpNewChannelOpenRequest { sender, max_message_size, max_capacity } =>
-				vec![HrmpNewChannelOpenRequest { sender, max_message_size, max_capacity }],
+			OldXcm::HrmpNewChannelOpenRequest { sender, max_message_size, max_capacity } => {
+				vec![HrmpNewChannelOpenRequest { sender, max_message_size, max_capacity }]
+			},
 			OldXcm::HrmpChannelAccepted { recipient } => vec![HrmpChannelAccepted { recipient }],
-			OldXcm::HrmpChannelClosing { initiator, sender, recipient } =>
-				vec![HrmpChannelClosing { initiator, sender, recipient }],
-			OldXcm::Transact { origin_type, require_weight_at_most, call } =>
-				vec![Transact { origin_type, require_weight_at_most, call }],
+			OldXcm::HrmpChannelClosing { initiator, sender, recipient } => {
+				vec![HrmpChannelClosing { initiator, sender, recipient }]
+			},
+			OldXcm::Transact { origin_type, require_weight_at_most, call } => {
+				vec![Transact { origin_type, require_weight_at_most, call }]
+			},
 			// We don't handle this one at all due to nested XCM.
 			OldXcm::RelayedFrom { .. } => return Err(()),
-			OldXcm::SubscribeVersion { query_id, max_response_weight } =>
-				vec![SubscribeVersion { query_id, max_response_weight }],
+			OldXcm::SubscribeVersion { query_id, max_response_weight } => {
+				vec![SubscribeVersion { query_id, max_response_weight }]
+			},
 			OldXcm::UnsubscribeVersion => vec![UnsubscribeVersion],
 		}))
 	}

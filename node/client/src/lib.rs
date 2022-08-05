@@ -47,7 +47,8 @@ pub type FullClient<RuntimeApi, ExecutorDispatch> =
 	feature = "rococo",
 	feature = "kusama",
 	feature = "westend",
-	feature = "polkadot"
+	feature = "polkadot",
+	feature = "portobello"
 )))]
 compile_error!("at least one runtime feature must be enabled");
 
@@ -116,6 +117,23 @@ impl sc_executor::NativeExecutionDispatch for RococoExecutorDispatch {
 
 	fn native_version() -> sc_executor::NativeVersion {
 		rococo_runtime::native_version()
+	}
+}
+
+#[cfg(feature = "portobello")]
+/// The native executor instance for portobello.
+pub struct PortobelloExecutorDispatch;
+
+#[cfg(feature = "portobello")]
+impl sc_executor::NativeExecutionDispatch for PortobelloExecutorDispatch {
+	type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+
+	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+		portobello_runtime::api::dispatch(method, data)
+	}
+
+	fn native_version() -> sc_executor::NativeVersion {
+		portobello_runtime::native_version()
 	}
 }
 

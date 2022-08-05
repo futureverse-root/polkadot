@@ -46,6 +46,11 @@ use westend_runtime as westend;
 #[cfg(feature = "westend-native")]
 use westend_runtime_constants::currency::UNITS as WND;
 
+#[cfg(feature = "portobello-native")]
+use portobello_runtime as portobello;
+#[cfg(feature = "portobello-native")]
+use portobello_runtime_constants::currency::UNITS as MYCL;
+
 #[cfg(feature = "polkadot-native")]
 const POLKADOT_STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 #[cfg(feature = "kusama-native")]
@@ -74,6 +79,11 @@ pub struct Extensions {
 	/// This value will be set by the `sync-state rpc` implementation.
 	pub light_sync_state: sc_sync_state_rpc::LightSyncStateExtension,
 }
+
+#[cfg(feature = "portobello-native")]
+pub type PortobelloChainSpec = service::GenericChainSpec<portobello::GenesisConfig, Extensions>;
+#[cfg(not(feature = "portobello-native"))]
+pub type PortobelloChainSpec = DummyChainSpec;
 
 /// The `ChainSpec` parameterized for the polkadot runtime.
 #[cfg(feature = "polkadot-native")]
@@ -168,7 +178,8 @@ pub fn wococo_config() -> Result<RococoChainSpec, String> {
 	feature = "rococo-native",
 	feature = "kusama-native",
 	feature = "westend-native",
-	feature = "polkadot-native"
+	feature = "polkadot-native",
+	feature = "portobello-native"
 ))]
 fn default_parachains_host_configuration(
 ) -> polkadot_runtime_parachains::configuration::HostConfiguration<
@@ -217,7 +228,8 @@ fn default_parachains_host_configuration(
 	feature = "rococo-native",
 	feature = "kusama-native",
 	feature = "westend-native",
-	feature = "polkadot-native"
+	feature = "polkadot-native",
+	feature = "portobello-native"
 ))]
 #[test]
 fn default_parachains_host_configuration_is_consistent() {
@@ -1095,6 +1107,17 @@ pub fn polkadot_chain_spec_properties() -> serde_json::map::Map<String, serde_js
 	.clone()
 }
 
+/// Returns the properties for the [`PolkadotChainSpec`].
+pub fn portobello_chain_spec_properties() -> serde_json::map::Map<String, serde_json::Value> {
+	serde_json::json!({
+		"tokenSymbol": "MYCL",
+		"tokenDecimals": 6,
+	})
+	.as_object()
+	.expect("Map given; qed")
+	.clone()
+}
+
 /// Polkadot staging testnet config.
 #[cfg(feature = "polkadot-native")]
 pub fn polkadot_staging_testnet_config() -> Result<PolkadotChainSpec, String> {
@@ -1300,6 +1323,92 @@ fn testnet_accounts() -> Vec<AccountId> {
 		get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 		get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 	]
+}
+
+/// Helper function to create polkadot `GenesisConfig` for testing
+#[cfg(feature = "portobello-native")]
+pub fn portobello_testnet_genesis(
+	wasm_binary: &[u8],
+	initial_authorities: Vec<(
+		AccountId,
+		AccountId,
+		BabeId,
+		GrandpaId,
+		ImOnlineId,
+		ValidatorId,
+		AssignmentId,
+		AuthorityDiscoveryId,
+	)>,
+	_root_key: AccountId,
+	endowed_accounts: Option<Vec<AccountId>>,
+) -> polkadot::GenesisConfig {
+	let endowed_accounts: Vec<AccountId> = endowed_accounts.unwrap_or_else(testnet_accounts);
+
+	const ENDOWMENT: u128 = 1_000_000 * MYCL;
+	const STASH: u128 = 100 * MYCL;
+
+	polkadot::GenesisConfig {
+		system: polkadot::SystemConfig { code: wasm_binary.to_vec() },
+		indices: polkadot::IndicesConfig { indices: vec![] },
+		balances: polkadot::BalancesConfig {
+			balances: endowed_accounts.iter().map(|k| (k.clone(), ENDOWMENT)).collect(),
+		},
+		session: polkadot::SessionConfig {
+			keys: initial_authorities
+				.iter()
+				.map(|x| {
+					(
+						x.0.clone(),
+						x.0.clone(),
+						polkadot_session_keys(
+							x.2.clone(),
+							x.3.clone(),
+							x.4.clone(),
+							x.5.clone(),
+							x.6.clone(),
+							x.7.clone(),
+						),
+					)
+				})
+				.collect::<Vec<_>>(),
+		},
+		staking: polkadot::StakingConfig {
+			minimum_validator_count: 1,
+			validator_count: initial_authorities.len() as u32,
+			stakers: initial_authorities
+				.iter()
+				.map(|x| (x.0.clone(), x.1.clone(), STASH, polkadot::StakerStatus::Validator))
+				.collect(),
+			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
+			force_era: Forcing::NotForcing,
+			slash_reward_fraction: Perbill::from_percent(10),
+			..Default::default()
+		},
+		phragmen_election: Default::default(),
+		democracy: polkadot::DemocracyConfig::default(),
+		council: polkadot::CouncilConfig { members: vec![], phantom: Default::default() },
+		technical_committee: polkadot::TechnicalCommitteeConfig {
+			members: vec![],
+			phantom: Default::default(),
+		},
+		technical_membership: Default::default(),
+		babe: polkadot::BabeConfig {
+			authorities: Default::default(),
+			epoch_config: Some(polkadot::BABE_GENESIS_EPOCH_CONFIG),
+		},
+		grandpa: Default::default(),
+		im_online: Default::default(),
+		authority_discovery: polkadot::AuthorityDiscoveryConfig { keys: vec![] },
+		claims: polkadot::ClaimsConfig { claims: vec![], vesting: vec![] },
+		vesting: polkadot::VestingConfig { vesting: vec![] },
+		treasury: Default::default(),
+		hrmp: Default::default(),
+		configuration: polkadot::ConfigurationConfig {
+			config: default_parachains_host_configuration(),
+		},
+		paras: Default::default(),
+		xcm_pallet: Default::default(),
+	}
 }
 
 /// Helper function to create polkadot `GenesisConfig` for testing
@@ -1648,6 +1757,29 @@ pub fn rococo_testnet_genesis(
 	}
 }
 
+#[cfg(feature = "portobello-native")]
+fn portobello_development_config_genesis(wasm_binary: &[u8]) -> polkadot::GenesisConfig {
+	portobello_testnet_genesis(
+		wasm_binary,
+		vec![get_authority_keys_from_seed_no_beefy("Alice")],
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		None,
+	)
+}
+
+#[cfg(feature = "portobello-native")]
+fn portobello_testnet_config_genesis(wasm_binary: &[u8]) -> polkadot::GenesisConfig {
+	portobello_testnet_genesis(
+		wasm_binary,
+		vec![
+			get_authority_keys_from_seed_no_beefy("Alice"),
+			get_authority_keys_from_seed_no_beefy("Bob"),
+		],
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		None,
+	)
+}
+
 #[cfg(feature = "polkadot-native")]
 fn polkadot_development_config_genesis(wasm_binary: &[u8]) -> polkadot::GenesisConfig {
 	polkadot_testnet_genesis(
@@ -1686,6 +1818,44 @@ fn rococo_development_config_genesis(wasm_binary: &[u8]) -> rococo_runtime::Gene
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
 		None,
 	)
+}
+
+/// Polkadot development config (single validator Alice)
+#[cfg(feature = "portobello-native")]
+pub fn portobello_development_config() -> Result<PolkadotChainSpec, String> {
+	let wasm_binary = polkadot::WASM_BINARY.ok_or("Polkadot development wasm not available")?;
+
+	Ok(PortobelloChainSpec::from_genesis(
+		"Portobello 🍄",
+		"portobello_dev",
+		ChainType::Development,
+		move || portobello_development_config_genesis(wasm_binary),
+		vec![],
+		None,
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		Some(portobello_chain_spec_properties()),
+		Default::default(),
+	))
+}
+
+/// Polkadot development config (single validator Alice)
+#[cfg(feature = "portobello-native")]
+pub fn portobello_testnet_config() -> Result<PolkadotChainSpec, String> {
+	let wasm_binary = polkadot::WASM_BINARY.ok_or("Polkadot development wasm not available")?;
+
+	Ok(PortobelloChainSpec::from_genesis(
+		"Portobello 🍄",
+		"portobello_dev",
+		ChainType::Development,
+		move || portobello_testnet_config_genesis(wasm_binary),
+		vec![],
+		None,
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		Some(portobello_chain_spec_properties()),
+		Default::default(),
+	))
 }
 
 /// Polkadot development config (single validator Alice)

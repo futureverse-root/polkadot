@@ -423,33 +423,38 @@ where
 
 		Request::Authorities(sender) => query!(Authorities, authorities(), ver = 1, sender),
 		Request::Validators(sender) => query!(Validators, validators(), ver = 1, sender),
-		Request::ValidatorGroups(sender) =>
-			query!(ValidatorGroups, validator_groups(), ver = 1, sender),
-		Request::AvailabilityCores(sender) =>
-			query!(AvailabilityCores, availability_cores(), ver = 1, sender),
+		Request::ValidatorGroups(sender) => {
+			query!(ValidatorGroups, validator_groups(), ver = 1, sender)
+		},
+		Request::AvailabilityCores(sender) => {
+			query!(AvailabilityCores, availability_cores(), ver = 1, sender)
+		},
 		Request::PersistedValidationData(para, assumption, sender) => query!(
 			PersistedValidationData,
 			persisted_validation_data(para, assumption),
 			ver = 1,
 			sender
 		),
-		Request::AssumedValidationData(para, expected_persisted_validation_data_hash, sender) =>
+		Request::AssumedValidationData(para, expected_persisted_validation_data_hash, sender) => {
 			query!(
 				AssumedValidationData,
 				assumed_validation_data(para, expected_persisted_validation_data_hash),
 				ver = 1,
 				sender
-			),
+			)
+		},
 		Request::CheckValidationOutputs(para, commitments, sender) => query!(
 			CheckValidationOutputs,
 			check_validation_outputs(para, commitments),
 			ver = 1,
 			sender
 		),
-		Request::SessionIndexForChild(sender) =>
-			query!(SessionIndexForChild, session_index_for_child(), ver = 1, sender),
-		Request::ValidationCode(para, assumption, sender) =>
-			query!(ValidationCode, validation_code(para, assumption), ver = 1, sender),
+		Request::SessionIndexForChild(sender) => {
+			query!(SessionIndexForChild, session_index_for_child(), ver = 1, sender)
+		},
+		Request::ValidationCode(para, assumption, sender) => {
+			query!(ValidationCode, validation_code(para, assumption), ver = 1, sender)
+		},
 		Request::ValidationCodeByHash(validation_code_hash, sender) => query!(
 			ValidationCodeByHash,
 			validation_code_by_hash(validation_code_hash),
@@ -462,8 +467,9 @@ where
 			ver = 1,
 			sender
 		),
-		Request::CandidateEvents(sender) =>
-			query!(CandidateEvents, candidate_events(), ver = 1, sender),
+		Request::CandidateEvents(sender) => {
+			query!(CandidateEvents, candidate_events(), ver = 1, sender)
+		},
 		Request::SessionInfo(index, sender) => {
 			let api = client.runtime_api();
 			let block_id = BlockId::Hash(relay_parent);
@@ -499,12 +505,15 @@ where
 			res.ok().map(|res| RequestResult::SessionInfo(relay_parent, index, res))
 		},
 		Request::DmqContents(id, sender) => query!(DmqContents, dmq_contents(id), ver = 1, sender),
-		Request::InboundHrmpChannelsContents(id, sender) =>
-			query!(InboundHrmpChannelsContents, inbound_hrmp_channels_contents(id), ver = 1, sender),
-		Request::CurrentBabeEpoch(sender) =>
-			query!(CurrentBabeEpoch, current_epoch(), ver = 1, sender),
-		Request::FetchOnChainVotes(sender) =>
-			query!(FetchOnChainVotes, on_chain_votes(), ver = 1, sender),
+		Request::InboundHrmpChannelsContents(id, sender) => {
+			query!(InboundHrmpChannelsContents, inbound_hrmp_channels_contents(id), ver = 1, sender)
+		},
+		Request::CurrentBabeEpoch(sender) => {
+			query!(CurrentBabeEpoch, current_epoch(), ver = 1, sender)
+		},
+		Request::FetchOnChainVotes(sender) => {
+			query!(FetchOnChainVotes, on_chain_votes(), ver = 1, sender)
+		},
 		Request::SubmitPvfCheckStatement(stmt, signature, sender) => {
 			query!(
 				SubmitPvfCheckStatement,
@@ -516,9 +525,11 @@ where
 		Request::PvfsRequirePrecheck(sender) => {
 			query!(PvfsRequirePrecheck, pvfs_require_precheck(), ver = 2, sender)
 		},
-		Request::ValidationCodeHash(para, assumption, sender) =>
-			query!(ValidationCodeHash, validation_code_hash(para, assumption), ver = 2, sender),
-		Request::StagingDisputes(sender) =>
-			query!(StagingDisputes, staging_get_disputes(), ver = 2, sender),
+		Request::ValidationCodeHash(para, assumption, sender) => {
+			query!(ValidationCodeHash, validation_code_hash(para, assumption), ver = 2, sender)
+		},
+		Request::StagingDisputes(sender) => {
+			query!(StagingDisputes, staging_get_disputes(), ver = 2, sender)
+		},
 	}
 }
